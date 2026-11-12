@@ -26,12 +26,16 @@ const restartButton = document.getElementById('restartButton')
 const winningMessageTextElement = document.getElementById('winningMessageText')
 const iframeElement = document.getElementById('winningMessageText')
 let isPlayer_O_Turn = false
+let confettiTimeout
+
+const CONFETTI_COLORS = ['#ff4d6d', '#ffd166', '#06d6a0', '#4cc9f0', '#c77dff']
 
 startGame()
 
 restartButton.addEventListener('click', startGame)
 
 function startGame() {
+	clearConfetti()
 	isPlayer_O_Turn = false
 	cellElements.forEach(cell => {
 		cell.classList.remove(PLAYER_X_CLASS)
@@ -42,6 +46,7 @@ function startGame() {
 	setBoardHoverClass()
 	winningMessageElement.classList.remove('show')
 	iframeElement.classList.remove('show')
+	boardElement.classList.remove('not-visible')
 }
 
 function handleCellClick(e) {
@@ -63,9 +68,46 @@ function endGame(draw)	{
 		winningMessageElement.innerHTML = "Het is gelijk spel! "
 	} else {
 		winningMessageElement.innerHTML = `Speler ${isPlayer_O_Turn ? "O" : "X"} Heeft Gewonnen!`
+		launchConfetti()
 	}
 	winningMessageElement.classList.add('show')
 	boardElement.classList.add('not-visible')
+}
+
+function launchConfetti() {
+	const confettiElement = document.createElement('div')
+	confettiElement.className = 'confetti-burst'
+	confettiElement.setAttribute('aria-hidden', 'true')
+
+	for (let index = 0; index < 64; index++) {
+		const piece = document.createElement('span')
+		const launchedFromLeft = index % 2 === 0
+		const horizontalDistance = 10 + Math.random() * 45
+		const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]
+
+		piece.className = 'confetti-piece'
+		piece.style.setProperty('--origin-x', launchedFromLeft ? '0%' : '100%')
+		piece.style.setProperty('--travel-x', `${launchedFromLeft ? horizontalDistance : -horizontalDistance}vw`)
+		piece.style.setProperty('--travel-y', `${-40 - Math.random() * 50}vh`)
+		piece.style.setProperty('--spin', `${Math.random() * 1080 - 540}deg`)
+		piece.style.setProperty('--delay', `${Math.random() * 180}ms`)
+		piece.style.setProperty('--piece-width', `${4 + Math.random() * 6}px`)
+		piece.style.setProperty('--piece-height', `${8 + Math.random() * 8}px`)
+		piece.style.backgroundColor = color
+		confettiElement.append(piece)
+	}
+
+	document.body.append(confettiElement)
+	confettiTimeout = window.setTimeout(() => {
+		confettiElement.remove()
+		confettiTimeout = undefined
+	}, 3200)
+}
+
+function clearConfetti() {
+	document.querySelector('.confetti-burst')?.remove()
+	window.clearTimeout(confettiTimeout)
+	confettiTimeout = undefined
 }
 
 function isDraw() {
